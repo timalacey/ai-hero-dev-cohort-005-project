@@ -73,9 +73,9 @@ function CoursePreview({ courses }: { courses: HeroCourse[] }) {
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Start here
             </p>
-            <h2 className="mt-1 text-lg font-semibold group-hover:text-primary">
+            <p className="mt-1 text-lg font-semibold group-hover:text-primary">
               {lead.title}
-            </h2>
+            </p>
             <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
               <CourseMeta
                 instructorName={lead.instructorName}
