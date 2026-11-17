@@ -52,3 +52,12 @@ describe("describeNoteDraft whitespace", () => {
     expect(draft.canSave).toBe(false);
   });
 });
+
+describe("describeNoteDraft length", () => {
+  it("does not count surrounding whitespace against the limit, since the server trims first", () => {
+    const draft = describeNoteDraft(`  ${"a".repeat(MAX_NOTE_LENGTH)}\n`, "");
+    expect(draft.length).toBe(MAX_NOTE_LENGTH);
+    expect(draft.tooLong).toBe(false);
+    expect(draft.canSave).toBe(true);
+  });
+});
