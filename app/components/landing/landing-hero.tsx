@@ -58,7 +58,7 @@ export function LandingHero({
 }
 
 function CoursePreview({ courses }: { courses: HeroCourse[] }) {
-  const [lead, ...rest] = courses;
+  const [lead, ...others] = courses;
   return (
     <div className="relative">
       <div className="absolute -inset-4 -z-10 rounded-3xl bg-gradient-to-br from-primary/15 via-primary/5 to-transparent blur-2xl" />
@@ -84,7 +84,7 @@ function CoursePreview({ courses }: { courses: HeroCourse[] }) {
             </div>
           </div>
         </Link>
-        {rest.map((course) => (
+        {others.map((course) => (
           <Link
             key={course.id}
             to={`/courses/${course.slug}`}
