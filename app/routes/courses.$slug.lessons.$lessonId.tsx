@@ -28,7 +28,7 @@ import { AlertTriangle } from "lucide-react";
 import { renderMarkdown } from "~/lib/markdown.server";
 import { data, isRouteErrorResponse } from "react-router";
 import { z } from "zod";
-import { parseFormData } from "~/lib/validation";
+import { parseFormData, parseParams } from "~/lib/validation";
 
 const createCommentSchema = z.object({
   intent: z.literal("create-comment"),
@@ -52,6 +52,21 @@ const saveNoteSchema = z.object({
       `Your note is over ${MAX_NOTE_LENGTH.toLocaleString("en")} characters, so it was not saved.`
     ),
 });
+
+const lessonParamsSchema = z.object({
+  lessonId: z.coerce.number().int().positive(),
+});
+
+const id = z.coerce.number().int().positive();
+
+const submitQuizSchema = z.object({ quizId: id });
+
+const QUESTION_FIELD = "question-";
+
+/** `question-{questionId}` fields, each holding the chosen option id. */
+const quizAnswersSchema = z
+  .array(z.tuple([id, id]))
+  .transform((pairs) => Object.fromEntries(pairs) as Record<number, number>);
 
 const deleteCommentSchema = z.object({
   intent: z.literal("delete-comment"),
@@ -197,7 +212,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
   const { course, person, enrolled, view, take, manage } = decisions;
   const currentUserId = person?.id ?? null;
-  const lessonId = Number(params.lessonId);
+  const { lessonId } = parseParams(params, lessonParamsSchema);
 
   const courseWithDetails = getCourseWithDetails(course.id);
   const lesson = getLessonById(lessonId);
@@ -348,7 +363,7 @@ export async function action({ params, request }: Route.ActionArgs) {
     ref
   );
   const currentUserId = person.id;
-  const lessonId = Number(params.lessonId);
+  const { lessonId } = parseParams(params, lessonParamsSchema);
 
   if (
     intent === "create-comment" ||
@@ -459,30 +474,28 @@ export async function action({ params, request }: Route.ActionArgs) {
   }
 
   if (intent === "submit-quiz") {
-    const quizId = Number(formData.get("quizId"));
-    if (isNaN(quizId)) {
+    const quiz = parseFormData(formData, submitQuizSchema);
+    if (!quiz.success) {
       throw data("Invalid quiz ID", { status: 400 });
     }
+    const { quizId } = quiz.data;
     // Scope the quiz to this lesson so a quiz elsewhere can't be reached by
     // posting its id to this route.
     if (!quizStore.findInLesson(quizId, lessonId)) {
       throw data("Quiz not found", { status: 404 });
     }
 
-    // Collect answers: form fields named "question-{questionId}" with value = optionId
-    const selectedAnswers: Record<number, number> = {};
-    for (const [key, value] of formData.entries()) {
-      if (key.startsWith("question-")) {
-        const questionId = Number(key.replace("question-", ""));
-        const optionId = Number(value);
-        if (!isNaN(questionId) && !isNaN(optionId)) {
-          selectedAnswers[questionId] = optionId;
-        }
-      }
+    const answers = quizAnswersSchema.safeParse(
+      [...formData.entries()]
+        .filter(([key]) => key.startsWith(QUESTION_FIELD))
+        .map(([key, value]) => [key.slice(QUESTION_FIELD.length), value])
+    );
+    if (!answers.success) {
+      throw data("Invalid quiz answers", { status: 400 });
     }
 
     const quizResult = quizStore.grade(
-      { userId: currentUserId, quizId, selected: selectedAnswers },
+      { userId: currentUserId, quizId, selected: answers.data },
       new Date()
     );
     return { quizResult };
