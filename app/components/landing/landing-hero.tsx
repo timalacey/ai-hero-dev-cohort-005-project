@@ -1,7 +1,8 @@
 import { Link } from "react-router";
-import { ArrowRight, BookOpen, Sparkles, User } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { CourseImage } from "~/components/course-image";
+import { CourseMeta } from "~/components/course-meta";
 
 export type HeroCourse = {
   id: number;
@@ -75,7 +76,12 @@ function CoursePreview({ courses }: { courses: HeroCourse[] }) {
             <h2 className="mt-1 text-lg font-semibold group-hover:text-primary">
               {lead.title}
             </h2>
-            <CourseMeta course={lead} />
+            <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
+              <CourseMeta
+                instructorName={lead.instructorName}
+                lessonCount={lead.lessonCount}
+              />
+            </div>
           </div>
         </Link>
         {rest.map((course) => (
@@ -91,21 +97,6 @@ function CoursePreview({ courses }: { courses: HeroCourse[] }) {
           </Link>
         ))}
       </div>
-    </div>
-  );
-}
-
-function CourseMeta({ course }: { course: HeroCourse }) {
-  return (
-    <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
-      <span className="flex items-center gap-1">
-        <User className="size-3" />
-        {course.instructorName ?? "Instructor"}
-      </span>
-      <span className="flex items-center gap-1">
-        <BookOpen className="size-3" />
-        {course.lessonCount} lessons
-      </span>
     </div>
   );
 }
