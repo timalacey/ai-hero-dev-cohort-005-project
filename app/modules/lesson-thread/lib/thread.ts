@@ -97,3 +97,16 @@ export function getLessonThread(db: Db, lessonId: number): ThreadComment[] {
   // A deleted question with no replies left has nothing worth showing.
   return topLevel.filter((c) => !c.deleted || c.replies.length > 0);
 }
+
+export function isCommentOnLesson(
+  db: Db,
+  lessonId: number,
+  commentId: number
+): boolean {
+  const row = db
+    .select({ lessonId: comments.lessonId })
+    .from(comments)
+    .where(eq(comments.id, commentId))
+    .get();
+  return row?.lessonId === lessonId;
+}

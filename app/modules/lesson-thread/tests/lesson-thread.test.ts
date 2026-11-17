@@ -136,3 +136,19 @@ describe("the rendered thread", () => {
     expect(rendered.bodyHtml).toBe("");
   });
 });
+
+describe("whether a comment is on a lesson", () => {
+  it("is true for a comment posted on the lesson", async () => {
+    const id = await seeded.post(seeded.student.id, "A question");
+    expect(thread.has(seeded.lessonId, id)).toBe(true);
+  });
+
+  it("is false for the same comment asked about from another lesson", async () => {
+    const id = await seeded.post(seeded.student.id, "A question");
+    expect(thread.has(seeded.lessonId + 1, id)).toBe(false);
+  });
+
+  it("is false for a comment that does not exist", () => {
+    expect(thread.has(seeded.lessonId, 999)).toBe(false);
+  });
+});

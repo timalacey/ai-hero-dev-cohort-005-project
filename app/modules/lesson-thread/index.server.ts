@@ -2,6 +2,7 @@ import { db } from "~/db";
 import { renderThread } from "./lib/render.server";
 import {
   getLessonThread,
+  isCommentOnLesson,
   type CommentAuthor,
   type Db,
   type ThreadComment,
@@ -21,6 +22,13 @@ export function createLessonThread(database: Db) {
     /** The thread with every body rendered to sanitised HTML. */
     rendered: (lessonId: number) =>
       renderThread(getLessonThread(database, lessonId)),
+    /**
+     * Whether the comment belongs to this lesson's thread. Check it before
+     * editing or deleting, so posting another lesson's comment id to this
+     * lesson's page reaches nothing.
+     */
+    has: (lessonId: number, commentId: number) =>
+      isCommentOnLesson(database, lessonId, commentId),
   };
 }
 
